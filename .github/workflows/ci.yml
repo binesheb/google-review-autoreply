@@ -26,3 +26,5 @@ jobs:
         run: ruff format --check app tests
       - name: Lint
         run: ruff check app tests
+      - name: Build production container
+        run: docker build --tag review-intelligence-platform:ci .
