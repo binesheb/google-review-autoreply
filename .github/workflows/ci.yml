@@ -26,6 +26,8 @@ jobs:
         run: ruff format --check app tests
       - name: Lint
         run: ruff check app tests
+      - name: Validate Python modules
+        run: python -m compileall -q app alembic
       - name: Validate Compose configuration
         run: |
           printf 'POSTGRES_PASSWORD=ci-only-password\n' > .env
