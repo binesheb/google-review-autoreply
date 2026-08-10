@@ -1,8 +1,7 @@
-# Configuration can be changed from the dashboard only after authentication is added.
-# The runtime environment remains the safe default source until that control layer is enabled.
-
+# Product defaults. Runtime dashboard settings override these values.
 mode: draft_only
 auto_publish: false
+automation_paused: true
 daily_publish_limit: 25
 ratings:
   5: approval
