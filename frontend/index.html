@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jayalakshmi Review AI</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;margin:0;background:#f5f6f8;color:#17202a}.top{background:#111827;color:white;padding:18px 24px}.wrap{max-width:1200px;margin:24px auto;padding:0 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 2px 8px #0000000a}.label{font-size:12px;color:#6b7280}.value{font-size:26px;font-weight:700;margin-top:6px}.status{font-size:13px}.ok{color:#15803d}.warn{color:#b45309}.section{margin-top:22px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}button{border:0;border-radius:8px;padding:10px 14px;background:#111827;color:white;cursor:pointer}button.secondary{background:#e5e7eb;color:#111827}table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden}th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;font-size:14px}pre{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:14px;border-radius:8px;overflow:auto}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style></head>
+<body><div class="top"><strong>Jayalakshmi Review Intelligence & Response Platform</strong><div class="status">Local-first • Draft-only baseline • Public auto-publishing disabled</div></div>
+<div class="wrap">
+<div class="grid" id="stats"><div class="card"><div class="label">System</div><div class="value" id="system">—</div></div><div class="card"><div class="label">Database</div><div class="value" id="db">—</div></div><div class="card"><div class="label">AI Model</div><div class="value" id="model">—</div></div><div class="card"><div class="label">Auto Publish</div><div class="value" id="auto">—</div></div></div>
+<div class="section card"><h2>Reviews</h2><div class="toolbar"><button onclick="refresh()">Refresh</button><button class="secondary" onclick="showSettings()">Settings</button><a href="/docs"><button class="secondary">API Docs</button></a></div><table><thead><tr><th>Store</th><th>Rating</th><th>Customer</th><th>Status</th><th>Risk</th><th>Action</th></tr></thead><tbody id="reviews"></tbody></table></div>
+<div class="section card"><h2>Learning / Architecture</h2><p>This dashboard is intentionally thin: the browser calls the FastAPI backend, the backend uses PostgreSQL for the review ledger, the knowledge service for verified context, and a local model provider for drafts. Publishing is a separate controlled operation.</p><pre>Google → ingestion → PostgreSQL → policy → knowledge → local AI → safety gate → approval → Google</pre></div>
+</div>
+<script>
+async function refresh(){const h=await fetch('/api/health').then(r=>r.json());document.getElementById('system').textContent=h.status;document.getElementById('db').textContent=h.database;document.getElementById('model').textContent=h.ai_model;document.getElementById('auto').textContent=h.auto_publish_enabled?'ENABLED':'OFF';const rows=await fetch('/api/reviews').then(r=>r.json());document.getElementById('reviews').innerHTML=rows.map(x=>`<tr><td>${x.location?.display_name||x.location_id}</td><td>${'★'.repeat(x.rating)}</td><td>${x.reviewer_name||'Customer'}</td><td>${x.status}</td><td>${x.risk_level}</td><td>${x.status==='queued'?`<button onclick="draft(${x.id})">Draft</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="6">No reviews yet.</td></tr>'}
+async function draft(id){const r=await fetch('/api/reviews/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({review_id:id})}).then(r=>r.json());alert(r.response||r.detail||'Unable to draft');refresh()}
+async function showSettings(){const s=await fetch('/api/settings').then(r=>r.json());alert(JSON.stringify(s,null,2))}
+refresh();setInterval(refresh,30000)
+</script></body></html>
