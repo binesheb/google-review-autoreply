@@ -43,6 +43,22 @@ class QdrantStore:
         )
         response.raise_for_status()
 
+    def delete_knowledge(self, knowledge_id: int) -> None:
+        response = httpx.post(
+            f"{self._collection_url()}/points/delete?wait=true",
+            json={
+                "filter": {
+                    "must": [
+                        {"key": "knowledge_id", "match": {"value": knowledge_id}},
+                    ]
+                }
+            },
+            timeout=30,
+        )
+        if response.status_code == 404:
+            return
+        response.raise_for_status()
+
     def upsert(self, points: list[dict]) -> None:
         if not points:
             return
