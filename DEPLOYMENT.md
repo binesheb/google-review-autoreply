@@ -1,79 +1,100 @@
-# Linux Deployment
+# Deployment
 
-The platform is designed to be provisioned as a Docker Compose stack. The target experience is a clean Linux server where one bootstrap command installs the runtime, pulls the current repository, creates persistent configuration, downloads the local AI model and starts the server.
+## Supported first-class target
 
-## One-command installation
+- Ubuntu
+- Debian
+- Docker Engine + Docker Compose plugin
+
+The installer is designed to bootstrap a clean server with one command.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo bash
 ```
 
-The installer currently targets Debian/Ubuntu hosts. Docker Engine and the Docker Compose plugin are installed from Docker's official APT repository when they are missing. The application is then downloaded from the `main` branch and deployed under `/opt/jayalakshmi-review`.
+## First install
 
-## What gets deployed
+The installer asks for:
 
-```text
-Linux server
-   │
-   └── Docker Engine
-        ├── API + Dashboard
-        ├── PostgreSQL       ← persistent review/audit data
-        ├── Qdrant           ← knowledge/vector storage foundation
-        └── Ollama           ← local AI runtime
-             └── qwen3:4b    ← initial local model
-```
+- Product / organisation-facing name
+- Administrator username
+- Administrator password
+- Web port
+- Timezone
+- Local AI model
+- Initial automatic-publishing preference
+- Installation directory
 
-The official Ollama Docker image supports CPU-only deployment and GPU-specific configurations. The initial stack deliberately uses CPU-compatible Ollama so the same installer works on ordinary Linux servers; GPU acceleration can be added later without changing the application/provider interface. citeturn3search2turn3search0
+It generates a random application secret and database password. The `.env` file is created with mode `600`.
 
-The model is downloaded by the one-shot `ollama-init` container during deployment. The model files are stored in the persistent `ollama_data` volume.
+## Non-interactive deployment
 
-## Data persistence
-
-PostgreSQL, Qdrant and Ollama use Docker named volumes. Rerunning the installer does not intentionally delete these volumes.
-
-Persistence is not a backup. A later production milestone will add a versioned backup/restore command and scheduled off-server backups.
-
-## Configuration
-
-The installer creates `.env` from `.env.example` on the first installation and generates a random `SECRET_KEY`. Subsequent installations preserve the existing `.env`.
-
-The container network uses service names rather than `localhost`:
-
-- PostgreSQL: `postgres:5432`
-- Qdrant: `qdrant:6333`
-- Ollama: `ollama:11434`
-
-Production Google credentials are never committed to GitHub. Google integration and public auto-publishing remain disabled by default.
-
-## Updating
-
-The installer is idempotent. Rerunning the same command downloads the current `main` branch and rebuilds the application while preserving `.env` and Docker volumes.
-
-For normal operations:
+For automated infrastructure, values can be supplied as environment variables:
 
 ```bash
-jayalakshmi-review ps
-jayalakshmi-review logs -f api
-jayalakshmi-review logs -f ollama
-jayalakshmi-review up -d --build
+APP_NAME="Review Intelligence Platform" \
+APP_PORT=8080 \
+APP_TIMEZONE=Asia/Kolkata \
+ADMIN_USERNAME=admin \
+AI_MODEL=qwen3:4b \
+NONINTERACTIVE=1 \
+curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo -E bash
 ```
 
-## GPU path
+On first install, `ADMIN_PASSWORD` must be provided securely and is converted into a PBKDF2 password hash. Do not place passwords in shell history or public automation logs.
 
-The default stack is CPU-compatible. For NVIDIA systems, the next deployment milestone will add an optional Compose override that enables the NVIDIA Container Toolkit and `--gpus=all`; Ollama documents this container configuration officially. citeturn3search2
+## Persistent data
 
-## Production hardening before public exposure
+Docker volumes preserve:
 
-The current installer is intended for controlled deployment/testing. Before exposing the dashboard to the public internet, we will add:
+- PostgreSQL data
+- Qdrant data
+- Ollama model data
 
-- HTTPS with a reverse proxy
-- administrator authentication and role-based access
-- secure secret handling
-- firewall policy
-- automated database backups
-- update/rollback support
-- monitoring and alerting
-- Google OAuth token encryption
-- signed release/version pinning
+The installer preserves `.env` during upgrades.
 
-Docker documents supported Linux Engine installation paths for Ubuntu and Debian and warns that published container ports can bypass some host firewall rules. We therefore should not treat a raw `:8000` deployment as the final internet-facing production configuration. citeturn0search0turn1search0
+## Upgrade
+
+Run the installer again or pull the repository and run:
+
+```bash
+review-platform up -d --build
+```
+
+The application code is replaced while persistent volumes and `.env` remain.
+
+## Service operations
+
+```bash
+review-platform ps
+review-platform logs -f api
+review-platform restart
+review-platform down
+review-platform up -d
+```
+
+## Security
+
+The default deployment is intended for controlled networks until HTTPS and production identity controls are configured. Do not expose the raw application port directly to the public internet without a reverse proxy, TLS, firewall policy and stronger authentication controls.
+
+## Safe publishing rollout
+
+The default product starts with automation paused. Recommended progression:
+
+```text
+Configure
+  ↓
+Historical dry run
+  ↓
+Golden benchmark
+  ↓
+Shadow mode
+  ↓
+Human approval
+  ↓
+Limited auto-publish
+```
+
+## Recovery
+
+Before production, add scheduled PostgreSQL backups and test restoration. Keep a known-good application version available for rollback.
