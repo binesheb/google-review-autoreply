@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
 from app.db import engine
@@ -13,7 +14,7 @@ def health():
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-    except Exception as exc:
+    except SQLAlchemyError as exc:
         database = f"error: {exc.__class__.__name__}"
     return {
         "status": "ok" if database == "ok" else "degraded",
