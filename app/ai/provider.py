@@ -1,25 +1,30 @@
-from pathlib import Path
 import httpx
 from app.core.config import settings, ROOT
 
-class LocalAI:
-    """Small provider adapter for an Ollama-compatible local HTTP API.
 
-    The rest of the application only knows this interface. That lets us swap
-    llama.cpp, Ollama or another local server without rewriting business logic.
+class LocalAI:
+    """Provider adapter for an Ollama-compatible local HTTP API.
+
+    Business logic depends only on this small interface so the runtime can be
+    replaced later without rewriting review workflows.
     """
+
     def __init__(self):
         self.base_url = settings.ai_base_url.rstrip("/")
         self.model = settings.ai_model
 
     def generate(self, prompt: str) -> str:
-        url = f"{self.base_url}/api/chat"
-        payload = {"model": self.model, "stream": False,
-                   "messages": [{"role": "user", "content": prompt}]}
-        headers = {"Authorization": f"Bearer {settings.ai_api_key}"} if settings.ai_api_key else {}
-        r = httpx.post(url, json=payload, headers=headers, timeout=120)
-        r.raise_for_status()
-        data = r.json()
+        response = httpx.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "stream": False,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=180,
+        )
+        response.raise_for_status()
+        data = response.json()
         return data["message"]["content"].strip()
 
 
