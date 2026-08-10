@@ -1,7 +1,7 @@
 [project]
-name = "jayalakshmi-review-platform"
-version = "0.1.0"
-description = "Local-first Google Business Profile Review Intelligence & Response Platform"
+name = "review-intelligence-platform"
+version = "1.0.0"
+description = "Generic local-first Review Intelligence and Response Platform"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115,<1",
@@ -14,6 +14,7 @@ dependencies = [
   "google-auth>=2.38,<3",
   "google-auth-oauthlib>=1.2,<2",
   "rapidfuzz>=3.12,<4",
+  "itsdangerous>=2.2,<3",
 ]
 
 [project.optional-dependencies]
