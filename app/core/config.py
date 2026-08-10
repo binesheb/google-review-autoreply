@@ -24,8 +24,10 @@ class Settings(BaseSettings):
     postgres_password: str = ""
 
     qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "knowledge"
     ai_base_url: str = "http://localhost:11434"
     ai_model: str = "qwen3:4b"
+    embedding_model: str = "embeddinggemma"
 
     google_enabled: bool = False
     google_access_token: str = ""
