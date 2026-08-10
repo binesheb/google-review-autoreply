@@ -1,3 +1,6 @@
+# Configuration can be changed from the dashboard only after authentication is added.
+# The runtime environment remains the safe default source until that control layer is enabled.
+
 mode: draft_only
 auto_publish: false
 daily_publish_limit: 25

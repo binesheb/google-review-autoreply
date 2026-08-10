@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
@@ -35,7 +35,7 @@ class Review(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
     location = relationship("Location", back_populates="reviews")
-    drafts = relationship("AIDraft", back_populates="review")
+    drafts = relationship("AIDraft", back_populates="review", order_by="AIDraft.created_at")
 
 class AIDraft(Base):
     __tablename__ = "ai_drafts"
@@ -91,3 +91,11 @@ class AuditLog(Base):
     target_id: Mapped[str] = mapped_column(String(255))
     detail: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    value: Mapped[str] = mapped_column(Text)
+    updated_by: Mapped[str] = mapped_column(String(255), default="system")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)

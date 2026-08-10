@@ -3,16 +3,22 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.db import Base, engine
-from app import models  # noqa: F401 - registers ORM models
+from app import models  # noqa: F401
 from app.api.reviews import router as reviews_router
 from app.api.settings import router as settings_router
 from app.api.health import router as health_router
+from app.api.knowledge import router as knowledge_router
+from app.api.cases import router as cases_router
+from app.api.google import router as google_router
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Jayalakshmi Review Intelligence Platform", version="0.1.0")
 app.include_router(reviews_router)
 app.include_router(settings_router)
 app.include_router(health_router)
+app.include_router(knowledge_router)
+app.include_router(cases_router)
+app.include_router(google_router)
 
 frontend = Path(__file__).resolve().parents[1] / "frontend"
 app.mount("/static", StaticFiles(directory=frontend), name="static")
