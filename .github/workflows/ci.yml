@@ -38,5 +38,7 @@ jobs:
           git add app tests
           git commit -m "Apply automated Ruff quality fixes"
           git push
+      - name: Lint diagnostics
+        run: ruff check app tests --output-format=github || true
       - name: Verify lint
         run: ruff check app tests
