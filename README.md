@@ -1,81 +1,161 @@
-# Jayalakshmi Review Intelligence & Response Platform
+# Review Intelligence Platform
 
-A self-hosted Google Business Profile review intelligence and response platform for Jayalakshmi Silks.
+A self-hosted, local-first platform for Google Business Profile review monitoring, AI-assisted response, approval workflows, complaint routing, knowledge management and reputation intelligence.
 
-## What this replaces
+The repository is intentionally **company-neutral**. A company, hotel group, retailer, clinic, restaurant chain or other organisation can install the same product and configure its own organisation, locations, policies, AI instructions and integrations.
 
-The original repository was a small Flask/OpenAI prototype that accepted one review and returned one generated reply. The platform is now structured for multi-location review ingestion, historical backlog support, verified knowledge/RAG, local-model abstraction, deterministic safety gates, approvals, complaint cases, auditability, analytics foundations and future multi-location operation.
+## One-command Linux installation
 
-## One-command Linux deployment
-
-The target deployment is a clean Linux server with Docker. The installer installs Docker Engine + Compose when needed, pulls the application from GitHub, creates persistent configuration, builds the containers and starts the server.
+On a clean Ubuntu/Debian server:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo bash
 ```
 
-Deployment details are documented in `DEPLOYMENT.md`.
+The installer is interactive on first install and asks for configurable deployment values such as:
 
-## Architecture
+- Product / organisation name
+- Admin username
+- Admin password
+- Web port
+- Timezone
+- Installation directory
+- Local AI model
+- Initial auto-publishing policy
+
+A non-interactive mode is also supported through environment variables for automated deployments.
+
+## Product architecture
 
 ```text
-Google Business Profile
-        ↓
-Review ingestion
-        ↓
-PostgreSQL review ledger
-        ↓
-Classification + policy
-        ↓
-Verified knowledge retrieval
-        ↓
-Local AI draft
-        ↓
-Deterministic safety gate
-        ↓
-Approval OR auto-publish
-        ↓
-Google owner reply
-        ↓
-Audit + learning candidate + analytics
+Review Source(s)
+      ↓
+Ingestion + Reconciliation
+      ↓
+Review Ledger (PostgreSQL)
+      ↓
+Language / Topic / Risk Classification
+      ↓
+Verified Knowledge Retrieval
+      ↓
+Local AI Response Draft
+      ↓
+Deterministic Safety Gate
+      ↓
+Auto Publish / Approval / Escalation
+      ↓
+Owner Reply + Internal Case
+      ↓
+Audit + Learning Dataset + Analytics
 ```
 
-## Design principles
+## Product principles
 
-- **Local-first AI:** the application does not require a hosted LLM. The AI provider is an interface; the first production target is a local HTTP-compatible model runtime.
-- **Knowledge is separate from model training:** changing store facts does not require retraining.
-- **AI drafts; rules govern publishing:** deterministic policy checks sit outside the model.
-- **Fail closed:** if critical safety, database or knowledge services are unavailable, automatic publishing is not allowed.
-- **Human control:** approval, edit, reject, regenerate, escalate and global pause are first-class operations.
-- **Learning is controlled:** human corrections become training candidates, but the live model never retrains itself automatically.
-- **Installer-first operations:** deployment should be reproducible from GitHub rather than depend on manual server setup.
+1. **Generic core** — no company name, store names, passwords or Google credentials are hard-coded.
+2. **Installer-first** — a fresh Linux server should be deployable without manually installing Python, PostgreSQL, Qdrant or the AI runtime.
+3. **Configuration separation** — infrastructure settings belong to installation configuration; business behaviour belongs in the dashboard and database.
+4. **Local-first AI** — the first deployment target is a local model runtime. The AI provider is replaceable.
+5. **Knowledge is not model training** — changing business facts should not require retraining.
+6. **AI drafts; rules govern publishing** — deterministic checks remain outside the model.
+7. **Fail closed** — critical safety or infrastructure failures disable automatic publication.
+8. **Human control** — approval, editing, rejection, escalation and global pause are first-class operations.
+9. **Controlled learning** — human corrections become training candidates; the live model never retrains itself silently.
+10. **Upgrade-safe** — application updates must preserve the database, configuration and persistent model data.
 
-## Services
+## Deployment services
 
 ```text
 Docker Compose
 ├── API + Dashboard
 ├── PostgreSQL
-└── Qdrant
+├── Qdrant
+└── Ollama
 ```
+
+The default deployment exposes only the application port. PostgreSQL, Qdrant and Ollama remain on the internal Docker network.
+
+## Configuration model
+
+### Installation-time configuration
+
+Examples:
+
+```text
+APP_NAME
+ADMIN_USERNAME
+ADMIN_PASSWORD_HASH
+APP_PORT
+APP_TIMEZONE
+INSTALL_DIR
+AI_MODEL
+AUTO_PUBLISH_ENABLED
+```
+
+### Runtime business configuration
+
+Managed from the dashboard:
+
+```text
+Organisation
+Locations
+Review sources
+AI instructions
+Knowledge base
+Safety rules
+Approval rules
+Automation
+Notifications
+Integrations
+```
+
+Secrets are never committed to GitHub.
 
 ## Development
 
-1. Copy `.env.example` to `.env`.
-2. Start PostgreSQL and Qdrant with `docker compose up -d postgres qdrant`.
-3. Install Python dependencies with `pip install -e .`.
-4. Start the API with `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
-5. Open `http://localhost:8000` for the control dashboard and `http://localhost:8000/docs` for the API documentation.
+```bash
+cp .env.example .env
+docker compose up -d postgres qdrant ollama
+pip install -e '.[test]'
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-## Important production gate
+Dashboard: `http://localhost:8000/`
 
-The application starts in **draft-only / shadow-safe mode**. Do not enable public auto-publishing until the historical dry run, golden benchmark, Google reconciliation tests, authentication and approval workflow have been validated.
+API documentation: `http://localhost:8000/docs`
 
-Google credentials are deliberately not committed. The Google connector remains disabled until OAuth credentials and verified Business Profile locations are configured.
+## Production rollout
+
+The default policy is safe: **draft / approval mode** and Google publishing disabled.
+
+Recommended rollout:
+
+```text
+Install
+  ↓
+Configure organisation
+  ↓
+Connect Google
+  ↓
+Import historical reviews
+  ↓
+Dry run
+  ↓
+Shadow mode
+  ↓
+Human approval
+  ↓
+Limited auto-publish
+  ↓
+Expanded automation
+```
+
+## Important
+
+This repository is the product foundation. Google OAuth, production TLS, stronger identity/RBAC, backups, migrations, monitoring and broader review-source connectors should be enabled and validated before internet-facing production use.
 
 ## Official Google references
 
-- Business Profile APIs: https://developers.google.com/my-business
-- Reviews resource: https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews
-- Review list: https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list
-- Reply update: https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/updateReply
+- https://developers.google.com/my-business
+- https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews
+- https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list
+- https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/updateReply
