@@ -31,7 +31,7 @@ def sync_reviews(actor: str = Depends(require_admin)):
     pages = 0
     try:
         client = GoogleBusinessProfileClient(settings.google_access_token)
-        locations = db.scalars(select(Location).where(Location.enabled == True)).all()  # noqa: E712
+        locations = db.scalars(select(Location).where(Location.enabled == True)).all()
         for location in locations:
             if not location.google_name:
                 continue
@@ -49,19 +49,51 @@ def sync_reviews(actor: str = Depends(require_admin)):
                     has_reply = bool(reply)
                     if not existing:
                         existing = Review(
-                            source="google", source_name=name, source_review_id=item.get("reviewId", ""), location_id=location.id,
-                            reviewer_name=reviewer.get("displayName"), rating=rating, comment=comment,
-                            review_created_at=_parse_time(item.get("createTime")), review_updated_at=_parse_time(item.get("updateTime")),
-                            has_owner_reply=has_reply, status="already_responded" if has_reply else "queued")
+                            source="google",
+                            source_name=name,
+                            source_review_id=item.get("reviewId", ""),
+                            location_id=location.id,
+                            reviewer_name=reviewer.get("displayName"),
+                            rating=rating,
+                            comment=comment,
+                            review_created_at=_parse_time(item.get("createTime")),
+                            review_updated_at=_parse_time(item.get("updateTime")),
+                            has_owner_reply=has_reply,
+                            status="already_responded" if has_reply else "queued",
+                        )
                         db.add(existing)
                         db.flush()
-                        db.add(ReviewVersion(review_id=existing.id, version=1, rating=rating, comment=comment, has_owner_reply=has_reply))
+                        db.add(
+                            ReviewVersion(
+                                review_id=existing.id,
+                                version=1,
+                                rating=rating,
+                                comment=comment,
+                                has_owner_reply=has_reply,
+                            )
+                        )
                         imported += 1
                     else:
-                        changed = existing.rating != rating or existing.comment != comment or existing.has_owner_reply != has_reply
+                        changed = (
+                            existing.rating != rating
+                            or existing.comment != comment
+                            or existing.has_owner_reply != has_reply
+                        )
                         if changed:
-                            latest = db.scalar(select(ReviewVersion).where(ReviewVersion.review_id == existing.id).order_by(ReviewVersion.version.desc()))
-                            db.add(ReviewVersion(review_id=existing.id, version=(latest.version if latest else 0) + 1, rating=rating, comment=comment, has_owner_reply=has_reply))
+                            latest = db.scalar(
+                                select(ReviewVersion)
+                                .where(ReviewVersion.review_id == existing.id)
+                                .order_by(ReviewVersion.version.desc())
+                            )
+                            db.add(
+                                ReviewVersion(
+                                    review_id=existing.id,
+                                    version=(latest.version if latest else 0) + 1,
+                                    rating=rating,
+                                    comment=comment,
+                                    has_owner_reply=has_reply,
+                                )
+                            )
                         existing.rating = rating
                         existing.comment = comment
                         existing.review_updated_at = _parse_time(item.get("updateTime"))
@@ -72,8 +104,21 @@ def sync_reviews(actor: str = Depends(require_admin)):
                 token = data.get("nextPageToken")
                 if not token:
                     break
-        db.add(AuditLog(action="google_reviews_synced", actor=actor, target_type="system", target_id="google", detail=f"locations={len(locations)};pages={pages};new={imported}"))
+        db.add(
+            AuditLog(
+                action="google_reviews_synced",
+                actor=actor,
+                target_type="system",
+                target_id="google",
+                detail=f"locations={len(locations)};pages={pages};new={imported}",
+            )
+        )
         db.commit()
-        return {"status": "ok", "locations": len(locations), "pages": pages, "new_reviews": imported}
+        return {
+            "status": "ok",
+            "locations": len(locations),
+            "pages": pages,
+            "new_reviews": imported,
+        }
     finally:
         db.close()
