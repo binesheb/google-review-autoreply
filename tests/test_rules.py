@@ -2,7 +2,7 @@ from app.ai.rules import classify, validate_response
 
 
 def test_low_rating_requires_approval():
-    risk, reasons = classify("Very poor service", 1)
+    risk, _ = classify("Very poor service", 1)
     assert risk == "high"
     result = validate_response("Thank you for sharing your feedback.", 1, "Very poor service", True)
     assert result.passed
