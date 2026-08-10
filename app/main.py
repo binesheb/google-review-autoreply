@@ -15,9 +15,6 @@ from app.api.knowledge import router as knowledge_router
 from app.api.reviews import router as reviews_router
 from app.api.settings import router as settings_router
 from app.core.config import settings
-from app.db import Base, engine
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 app.include_router(auth_router)
