@@ -20,6 +20,7 @@ class KnowledgeService:
         chunks = chunk_text(item.content)
         if not chunks:
             return
+        self.vectors.delete_knowledge(item.id)
         vectors = self.embeddings.embed(chunks)
         points = [
             {
