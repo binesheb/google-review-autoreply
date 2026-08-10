@@ -60,7 +60,9 @@ class KnowledgeService:
                 if len(ids) >= limit:
                     break
             if ids:
-                items = self.db.scalars(select(KnowledgeItem).where(KnowledgeItem.id.in_(ids))).all()
+                items = self.db.scalars(
+                    select(KnowledgeItem).where(KnowledgeItem.id.in_(ids))
+                ).all()
                 by_id = {item.id: item for item in items}
                 return [
                     item

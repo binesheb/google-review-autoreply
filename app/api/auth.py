@@ -2,7 +2,13 @@ from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 
 from app.core.config import settings
-from app.security import SESSION_COOKIE, SESSION_MAX_AGE, create_session, read_session, verify_password
+from app.security import (
+    SESSION_COOKIE,
+    SESSION_MAX_AGE,
+    create_session,
+    read_session,
+    verify_password,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
