@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.knowledge.service import KnowledgeService
 from app.models import AuditLog, KnowledgeItem, Organization
 from app.security import require_admin
 
@@ -24,6 +25,24 @@ class KnowledgeIn(BaseModel):
 @router.get("")
 def list_knowledge(db: Session = Depends(get_db), _: str = Depends(require_admin)):
     return db.scalars(select(KnowledgeItem).order_by(KnowledgeItem.updated_at.desc())).all()
+
+
+def _index_active_item(db: Session, item: KnowledgeItem) -> None:
+    if item.status != "active":
+        return
+    try:
+        KnowledgeService(db).index(item)
+    except Exception as exc:  # noqa: BLE001
+        db.add(
+            AuditLog(
+                action="knowledge_index_failed",
+                actor="system",
+                target_type="knowledge",
+                target_id=str(item.id),
+                detail=f"{type(exc).__name__}: {exc}",
+            )
+        )
+        db.commit()
 
 
 @router.post("")
@@ -65,6 +84,7 @@ def create_knowledge(
     )
     db.commit()
     db.refresh(item)
+    _index_active_item(db, item)
     return item
 
 
@@ -97,4 +117,5 @@ def update_knowledge(
     )
     db.commit()
     db.refresh(item)
+    _index_active_item(db, item)
     return item
