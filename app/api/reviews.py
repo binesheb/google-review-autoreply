@@ -18,7 +18,13 @@ def _get_review(db: Session, review_id: int):
 
 @router.get("")
 def list_reviews(db: Session = Depends(get_db)):
-    return db.scalars(select(Review).order_by(Review.updated_at.desc()).limit(200)).all()
+    reviews = db.scalars(select(Review).order_by(Review.updated_at.desc()).limit(200)).all()
+    return [{
+        "id": r.id, "location": r.location.display_name, "rating": r.rating,
+        "reviewer_name": r.reviewer_name, "status": r.status, "risk_level": r.risk_level,
+        "comment": r.comment, "has_google_reply": r.has_google_reply,
+        "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+    } for r in reviews]
 
 @router.post("/ingest", response_model=dict)
 def ingest_review(payload: ReviewIn, db: Session = Depends(get_db)):
@@ -35,8 +41,7 @@ def ingest_review(payload: ReviewIn, db: Session = Depends(get_db)):
                         status="already_responded" if payload.has_google_reply else "queued")
         db.add(review)
     else:
-        review.rating = payload.rating
-        review.comment = payload.comment
+        review.rating = payload.rating; review.comment = payload.comment
         review.has_google_reply = payload.has_google_reply
         if payload.has_google_reply:
             review.status = "already_responded"
@@ -84,8 +89,7 @@ def publish(review_id: int, payload: ActionRequest, db: Session = Depends(get_db
     if not approved:
         raise HTTPException(403, "Human approval is required before publishing")
     result = GoogleBusinessProfileClient(settings.google_access_token).update_reply(review.google_name, latest.response_text)
-    review.has_google_reply = True
-    review.status = "published"
+    review.has_google_reply = True; review.status = "published"
     db.add(AuditLog(action="google_reply_published", target_type="review", target_id=str(review.id), detail=payload.actor))
     db.commit()
     return {"status": "published", "google": result}

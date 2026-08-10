@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ai_model: str = "qwen3:4b"
     ai_api_key: str = ""
     google_enabled: bool = False
+    google_access_token: str = ""
     google_account_id: str = ""
     google_client_id: str = ""
     google_client_secret: str = ""
