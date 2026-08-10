@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=75,<81", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "review-intelligence-platform"
 version = "1.0.0"
@@ -19,6 +23,9 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9", "pytest-asyncio>=0.25,<1", "ruff>=0.11,<1"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
