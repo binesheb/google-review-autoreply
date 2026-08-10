@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -20,8 +21,8 @@ class ReviewIn(BaseModel):
     reviewer_name: str | None = None
     rating: int
     comment: str = ""
-    review_created_at: object | None = None
-    review_updated_at: object | None = None
+    review_created_at: datetime | None = None
+    review_updated_at: datetime | None = None
     has_owner_reply: bool = False
 
 
@@ -88,6 +89,7 @@ def ingest_review(payload: ReviewIn, db: Session = Depends(get_db), actor: str =
             db.add(ReviewVersion(review_id=review.id, version=version, rating=payload.rating, comment=payload.comment, has_owner_reply=payload.has_owner_reply))
         review.rating = payload.rating
         review.comment = payload.comment
+        review.review_updated_at = payload.review_updated_at
         review.has_owner_reply = payload.has_owner_reply
         review.status = "already_responded" if payload.has_owner_reply else ("queued" if review.status == "already_responded" else review.status)
 
