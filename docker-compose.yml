@@ -25,6 +25,33 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  ollama:
+    image: ollama/ollama:0.32.5
+    restart: unless-stopped
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  ollama-init:
+    image: ollama/ollama:0.32.5
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      AI_MODEL: ${AI_MODEL:-qwen3:4b}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull \"$${AI_MODEL}\""]
+    volumes:
+      - ollama_data:/root/.ollama
+
   api:
     build: .
     restart: unless-stopped
@@ -36,6 +63,8 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
+      ollama-init:
+        condition: service_completed_successfully
     volumes:
       - ./config:/app/config
       - ./knowledge:/app/knowledge
@@ -43,3 +72,4 @@ services:
 volumes:
   postgres_data:
   qdrant_data:
+  ollama_data:
