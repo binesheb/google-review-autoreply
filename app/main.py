@@ -10,6 +10,7 @@ from app.api.reviews import router as reviews_router
 from app.api.settings import router as settings_router
 from app.api.health import router as health_router
 from app.api.knowledge import router as knowledge_router
+from app.api.instructions import router as instructions_router
 from app.api.cases import router as cases_router
 from app.api.google import router as google_router
 from app.core.config import settings
@@ -23,6 +24,7 @@ app.include_router(reviews_router)
 app.include_router(settings_router)
 app.include_router(health_router)
 app.include_router(knowledge_router)
+app.include_router(instructions_router)
 app.include_router(cases_router)
 app.include_router(google_router)
 
