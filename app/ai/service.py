@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.ai.provider import LocalAI, load_instructions
 from app.ai.rules import classify, validate_response
 from app.core.config import settings
@@ -28,7 +29,10 @@ class ResponseService:
     def draft(self, review: Review) -> AIDraft:
         risk, _ = classify(review.comment, review.rating)
         facts = self.knowledge.retrieve(review.comment, scope=review.location.display_name)
-        evidence = "\n".join(f"- {x.title}: {x.content}" for x in facts) or "No verified fact found. Do not invent facts."
+        evidence = (
+            "\n".join(f"- {x.title}: {x.content}" for x in facts)
+            or "No verified fact found. Do not invent facts."
+        )
         instructions, instruction_version = self._instructions()
         prompt = f"""You are the review response assistant for {settings.app_name}.
 
@@ -37,9 +41,9 @@ MASTER INSTRUCTIONS:
 
 REVIEW:
 Rating: {review.rating}/5
-Customer: {review.reviewer_name or 'Customer'}
+Customer: {review.reviewer_name or "Customer"}
 Location: {review.location.display_name}
-Text: {review.comment or '[No text]'}
+Text: {review.comment or "[No text]"}
 
 VERIFIED KNOWLEDGE:
 {evidence}
@@ -49,7 +53,12 @@ RISK CLASSIFICATION: {risk}
 Write only the proposed public owner reply. Never invent facts, refunds, compensation, contact details or actions that are not supported by the instructions or verified knowledge.
 """
         response = self.ai.generate(prompt)
-        safety = validate_response(response, review.rating, review.comment, settings.auto_publish_enabled and review.location.auto_publish)
+        safety = validate_response(
+            response,
+            review.rating,
+            review.comment,
+            settings.auto_publish_enabled and review.location.auto_publish,
+        )
         draft = AIDraft(
             review_id=review.id,
             model=self.ai.model,
@@ -61,7 +70,14 @@ Write only the proposed public owner reply. Never invent facts, refunds, compens
             risk_reasons=";".join(safety.reasons),
         )
         self.db.add(draft)
-        self.db.add(AuditLog(action="ai_draft_created", target_type="review", target_id=str(review.id), detail=f"model={self.ai.model};instructions={instruction_version};risk={risk};eligible={safety.auto_eligible}"))
+        self.db.add(
+            AuditLog(
+                action="ai_draft_created",
+                target_type="review",
+                target_id=str(review.id),
+                detail=f"model={self.ai.model};instructions={instruction_version};risk={risk};eligible={safety.auto_eligible}",
+            )
+        )
         self.db.commit()
         self.db.refresh(draft)
         return draft

@@ -1,5 +1,6 @@
 import httpx
-from app.core.config import settings, ROOT
+
+from app.core.config import ROOT, settings
 
 
 class LocalAI:

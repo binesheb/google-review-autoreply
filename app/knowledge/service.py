@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.models import KnowledgeItem, Organization
 
 
@@ -14,13 +16,15 @@ class KnowledgeService:
         org = self.db.scalar(select(Organization).order_by(Organization.id.asc()))
         if not org:
             return []
-        now = datetime.now(timezone.utc)
-        items = list(self.db.scalars(
-            select(KnowledgeItem).where(
-                KnowledgeItem.organization_id == org.id,
-                KnowledgeItem.status == "active",
-            )
-        ).all())
+        now = datetime.now(UTC)
+        items = list(
+            self.db.scalars(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.organization_id == org.id,
+                    KnowledgeItem.status == "active",
+                )
+            ).all()
+        )
         q = set(query.lower().split())
         scored = []
         for item in items:

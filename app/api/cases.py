@@ -1,10 +1,12 @@
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.db import get_db
-from app.models import Case, AuditLog
+from app.models import AuditLog, Case
 from app.security import require_admin
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
@@ -25,11 +27,28 @@ def list_cases(db: Session = Depends(get_db), _: str = Depends(require_admin)):
 
 
 @router.post("")
-def create_case(payload: CaseIn, db: Session = Depends(get_db), actor: str = Depends(require_admin)):
-    item = Case(review_id=payload.review_id, category=payload.category, priority=payload.priority, owner=payload.owner, due_at=payload.due_at, notes=payload.notes)
+def create_case(
+    payload: CaseIn, db: Session = Depends(get_db), actor: str = Depends(require_admin)
+):
+    item = Case(
+        review_id=payload.review_id,
+        category=payload.category,
+        priority=payload.priority,
+        owner=payload.owner,
+        due_at=payload.due_at,
+        notes=payload.notes,
+    )
     db.add(item)
     db.flush()
-    db.add(AuditLog(action="case_created", actor=actor, target_type="case", target_id=str(item.id), detail=payload.category))
+    db.add(
+        AuditLog(
+            action="case_created",
+            actor=actor,
+            target_type="case",
+            target_id=str(item.id),
+            detail=payload.category,
+        )
+    )
     db.commit()
     db.refresh(item)
     return item
@@ -41,6 +60,14 @@ def close_case(case_id: int, db: Session = Depends(get_db), actor: str = Depends
     if not item:
         raise HTTPException(404, "Case not found")
     item.status = "closed"
-    db.add(AuditLog(action="case_closed", actor=actor, target_type="case", target_id=str(item.id), detail="closed"))
+    db.add(
+        AuditLog(
+            action="case_closed",
+            actor=actor,
+            target_type="case",
+            target_id=str(item.id),
+            detail="closed",
+        )
+    )
     db.commit()
     return {"id": item.id, "status": item.status}

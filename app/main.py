@@ -1,19 +1,21 @@
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from app.db import Base, engine
+
 from app import models  # noqa: F401
-from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
-from app.api.reviews import router as reviews_router
-from app.api.settings import router as settings_router
-from app.api.health import router as health_router
-from app.api.knowledge import router as knowledge_router
-from app.api.instructions import router as instructions_router
+from app.api.auth import router as auth_router
 from app.api.cases import router as cases_router
 from app.api.google import router as google_router
+from app.api.health import router as health_router
+from app.api.instructions import router as instructions_router
+from app.api.knowledge import router as knowledge_router
+from app.api.reviews import router as reviews_router
+from app.api.settings import router as settings_router
 from app.core.config import settings
+from app.db import Base, engine
 
 Base.metadata.create_all(bind=engine)
 

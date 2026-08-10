@@ -1,10 +1,11 @@
 import httpx
-from app.core.config import settings
 
 BASE = "https://mybusiness.googleapis.com/v4"
 
+
 class GoogleBusinessProfileClient:
     """Thin REST client. OAuth/token persistence is intentionally kept outside this class."""
+
     def __init__(self, access_token: str):
         self.access_token = access_token
 
@@ -16,13 +17,19 @@ class GoogleBusinessProfileClient:
         params = {"pageSize": min(page_size, 50), "orderBy": "updateTime desc"}
         if page_token:
             params["pageToken"] = page_token
-        r = httpx.get(f"{BASE}/{location_name}/reviews", headers=self.headers, params=params, timeout=30)
+        r = httpx.get(
+            f"{BASE}/{location_name}/reviews", headers=self.headers, params=params, timeout=30
+        )
         r.raise_for_status()
         return r.json()
 
     def update_reply(self, review_name: str, comment: str):
-        r = httpx.put(f"{BASE}/{review_name}/reply", headers={**self.headers, "Content-Type": "application/json"},
-                      json={"comment": comment}, timeout=30)
+        r = httpx.put(
+            f"{BASE}/{review_name}/reply",
+            headers={**self.headers, "Content-Type": "application/json"},
+            json={"comment": comment},
+            timeout=30,
+        )
         r.raise_for_status()
         return r.json()
 

@@ -1,11 +1,13 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db import Base
 
 
 def now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Organization(Base):
@@ -22,7 +24,9 @@ class Location(Base):
     __tablename__ = "locations"
     id: Mapped[int] = mapped_column(primary_key=True)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
-    google_name: Mapped[str | None] = mapped_column(String(500), unique=True, nullable=True, index=True)
+    google_name: Mapped[str | None] = mapped_column(
+        String(500), unique=True, nullable=True, index=True
+    )
     display_name: Mapped[str] = mapped_column(String(255))
     code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -41,8 +45,12 @@ class Review(Base):
     reviewer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     rating: Mapped[int] = mapped_column(Integer)
     comment: Mapped[str] = mapped_column(Text, default="")
-    review_created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    review_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    review_created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    review_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     has_owner_reply: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(50), default="discovered", index=True)
     risk_level: Mapped[str] = mapped_column(String(20), default="unknown")

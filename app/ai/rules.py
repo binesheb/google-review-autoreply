@@ -2,14 +2,34 @@ import re
 from dataclasses import dataclass
 
 HIGH_RISK = [
-    "lawyer", "legal", "court", "police", "consumer forum", "consumer court",
-    "injury", "accident", "discrimination", "harassment", "fraud", "scam",
-    "stolen", "threat", "compensation", "refund", "chargeback", "media", "press"
+    "lawyer",
+    "legal",
+    "court",
+    "police",
+    "consumer forum",
+    "consumer court",
+    "injury",
+    "accident",
+    "discrimination",
+    "harassment",
+    "fraud",
+    "scam",
+    "stolen",
+    "threat",
+    "compensation",
+    "refund",
+    "chargeback",
+    "media",
+    "press",
 ]
 PROHIBITED_PATTERNS = [
-    r"\bwe will refund\b", r"\bwe guarantee\b", r"\blegal liability\b",
-    r"\bcontact me at\b", r"\bcall me at\b"
+    r"\bwe will refund\b",
+    r"\bwe guarantee\b",
+    r"\blegal liability\b",
+    r"\bcontact me at\b",
+    r"\bcall me at\b",
 ]
+
 
 @dataclass
 class SafetyResult:
@@ -17,6 +37,7 @@ class SafetyResult:
     auto_eligible: bool
     reasons: list[str]
     risk_level: str
+
 
 def classify(review_text: str, rating: int) -> tuple[str, list[str]]:
     text = review_text.lower()
@@ -31,7 +52,10 @@ def classify(review_text: str, rating: int) -> tuple[str, list[str]]:
         return "low", reasons
     return ("high" if rating <= 2 or "high_risk_keyword" in reasons else "medium"), reasons
 
-def validate_response(response: str, rating: int, review_text: str, auto_enabled: bool) -> SafetyResult:
+
+def validate_response(
+    response: str, rating: int, review_text: str, auto_enabled: bool
+) -> SafetyResult:
     reasons: list[str] = []
     lower = response.lower()
     for pattern in PROHIBITED_PATTERNS:
@@ -45,6 +69,10 @@ def validate_response(response: str, rating: int, review_text: str, auto_enabled
         reasons.append("mixed_review_requires_approval")
     if any(term in review_text.lower() for term in HIGH_RISK):
         reasons.append("high_risk_review_requires_escalation")
-    passed = not any(x.startswith("prohibited_pattern") or x == "response_too_long" for x in reasons)
-    auto_eligible = passed and auto_enabled and rating >= 4 and not any("requires_" in x for x in reasons)
+    passed = not any(
+        x.startswith("prohibited_pattern") or x == "response_too_long" for x in reasons
+    )
+    auto_eligible = (
+        passed and auto_enabled and rating >= 4 and not any("requires_" in x for x in reasons)
+    )
     return SafetyResult(passed, auto_eligible, reasons, "high" if reasons else "low")
