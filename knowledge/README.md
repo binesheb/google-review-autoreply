@@ -1,14 +1,18 @@
-# Verified Company Knowledge
+# Organisation Knowledge Base
 
-Only information marked **active** in the database should be used for public factual claims.
+This directory contains seed/reference knowledge shipped with the product. Production knowledge should be managed through the authenticated dashboard so it can be scoped, verified, versioned and expired.
 
-Recommended records:
+Recommended structure for organisations:
 
-- Company profile and approved brand statements.
-- One record per showroom for address, hours, parking, facilities and services.
-- Product categories and approved descriptions.
-- Wedding shopping and customer-assistance services.
-- Payment, alteration, delivery and other customer-facing policies.
-- Temporary campaigns with explicit start and expiry dates.
+```text
+company/
+locations/
+products/
+services/
+facilities/
+policies/
+campaigns/
+review-policy/
+```
 
-Do not copy unverified operational information into this directory and assume it is authoritative. The database is the future source of truth; this file is an onboarding guide.
+Only verified and active knowledge should be used for factual public replies.
