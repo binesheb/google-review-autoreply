@@ -19,8 +19,8 @@ class KnowledgeService:
     def index(self, item: KnowledgeItem) -> None:
         chunks = chunk_text(item.content)
         if not chunks:
+            self.vectors.delete_knowledge(item.id)
             return
-        self.vectors.delete_knowledge(item.id)
         vectors = self.embeddings.embed(chunks)
         points = [
             {
@@ -36,6 +36,7 @@ class KnowledgeService:
             }
             for index, (chunk, vector) in enumerate(zip(chunks, vectors, strict=True))
         ]
+        self.vectors.delete_knowledge(item.id)
         self.vectors.upsert(points)
 
     def retrieve(self, query: str, scope: str | None = None, limit: int = 5) -> list[KnowledgeItem]:
