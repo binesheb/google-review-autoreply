@@ -4,9 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db import get_db
-from app.models import Organization, Location, AuditLog, SystemSetting
+from app.models import Organization, Location, AuditLog
 from app.security import require_admin
-from fastapi import Request
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -23,7 +22,7 @@ class LocationInput(BaseModel):
 
 
 @router.get("/bootstrap")
-def bootstrap(request: Request, db: Session = Depends(get_db), _: str = Depends(require_admin)):
+def bootstrap(db: Session = Depends(get_db), _: str = Depends(require_admin)):
     org = db.scalar(select(Organization).order_by(Organization.id.asc()))
     return {
         "product": settings.app_name,
