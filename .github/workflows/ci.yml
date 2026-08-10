@@ -26,5 +26,10 @@ jobs:
         run: ruff format --check app tests
       - name: Lint
         run: ruff check app tests
+      - name: Validate Compose configuration
+        run: |
+          printf 'POSTGRES_PASSWORD=ci-only-password\n' > .env
+          docker compose config --quiet
+          rm -f .env
       - name: Build production container
         run: docker build --tag review-intelligence-platform:ci .
