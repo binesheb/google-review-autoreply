@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 
 from app.core.config import settings
-from app.security import verify_password
+from app.security import SESSION_COOKIE, SESSION_MAX_AGE, create_session, read_session, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -14,7 +14,7 @@ class LoginRequest(BaseModel):
 
 @router.get("/status")
 def auth_status(request: Request):
-    user = request.cookies.get("rip_user")
+    user = read_session(request.cookies.get(SESSION_COOKIE))
     return {"authenticated": bool(user and user == settings.admin_username), "username": user}
 
 
@@ -28,13 +28,19 @@ def login(payload: LoginRequest, response: Response):
             media_type="application/json",
             status_code=401,
         )
+
     response.set_cookie(
-        "rip_user", payload.username, httponly=True, samesite="lax", secure=False, max_age=8 * 3600
+        SESSION_COOKIE,
+        create_session(payload.username),
+        httponly=True,
+        samesite="strict",
+        secure=settings.app_env == "production",
+        max_age=SESSION_MAX_AGE,
     )
     return {"authenticated": True, "username": payload.username}
 
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("rip_user")
+    response.delete_cookie(SESSION_COOKIE)
     return {"authenticated": False}
