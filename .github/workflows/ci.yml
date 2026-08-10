@@ -5,14 +5,14 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -22,23 +22,7 @@ jobs:
           python -m pip install -e '.[test]'
       - name: Run tests
         run: pytest
-      - name: Auto-fix lint and formatting
-        run: |
-          ruff check app tests --fix || true
-          ruff format app tests
-      - name: Commit automated quality fixes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          if git diff --quiet; then
-            echo "No automated quality fixes required."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app tests
-          git commit -m "Apply automated Ruff quality fixes"
-          git push
-      - name: Lint diagnostics
-        run: ruff check app tests --output-format=github || true
-      - name: Verify lint
+      - name: Check formatting
+        run: ruff format --check app tests
+      - name: Lint
         run: ruff check app tests
