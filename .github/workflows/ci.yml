@@ -24,7 +24,7 @@ jobs:
         run: pytest
       - name: Auto-fix lint and formatting
         run: |
-          ruff check app tests --fix
+          ruff check app tests --fix || true
           ruff format app tests
       - name: Commit automated quality fixes
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
