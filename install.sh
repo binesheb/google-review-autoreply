@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-REPO="https://github.com/binesheb/google-review-autoreply.git"
-REF="main"
 INSTALL_DIR="/opt/jayalakshmi-review"
 PORT="8000"
 
@@ -14,9 +12,10 @@ die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || die "curl is required. Install curl and run the installer again."
 command -v tar >/dev/null 2>&1 || die "tar is required. Install tar and run the installer again."
 
+. /etc/os-release
+
 install_docker_debian() {
   log "Installing Docker Engine from Docker's official APT repository..."
-  . /etc/os-release
   apt-get update
   apt-get install -y ca-certificates curl
   install -m 0755 -d /etc/apt/keyrings
@@ -53,7 +52,7 @@ EOF
 }
 
 if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
-  case "${ID:-}" in
+  case "$ID" in
     ubuntu|debian) install_docker_debian || die "Docker installation failed." ;;
     *) die "Docker Compose is not installed. Install Docker Engine + Compose for this Linux distribution, then rerun the installer." ;;
   esac
@@ -66,8 +65,8 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 ARCHIVE="$TMP_DIR/review-platform.tar.gz"
 
-log "Downloading the application from GitHub ($REF)..."
-curl -fL --retry 3 --retry-delay 2 "https://github.com/binesheb/google-review-autoreply/archive/refs/heads/${REF}.tar.gz" -o "$ARCHIVE"
+log "Downloading the application from GitHub (main)..."
+curl -fL --retry 3 --retry-delay 2 "https://github.com/binesheb/google-review-autoreply/archive/refs/heads/main.tar.gz" -o "$ARCHIVE"
 
 rm -rf "$INSTALL_DIR"/*
 tar -xzf "$ARCHIVE" -C "$TMP_DIR"
@@ -85,7 +84,7 @@ if [[ ! -f .env ]]; then
   fi
 fi
 
-# The installer may be rerun after an upgrade. Preserve existing .env and database volumes.
+# Preserve existing configuration and database volumes when the installer is rerun.
 if grep -q '^APP_PORT=' .env; then
   sed -i "s/^APP_PORT=.*/APP_PORT=$PORT/" .env
 else
