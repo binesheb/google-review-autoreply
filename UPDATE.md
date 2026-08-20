@@ -4,51 +4,46 @@ This deployment is designed to be upgraded without replacing persistent PostgreS
 
 ## Automatic update
 
-For a managed deployment, schedule the following command from a trusted administrator account. The command is intentionally explicit and only updates the checked-out repository and application containers:
+The repository includes `scripts/update.sh`. It refuses to overwrite local changes, fast-forwards only from the configured branch, validates the Compose configuration, refreshes container images/build dependencies, and recreates the stack without touching persistent volumes.
+
+For a managed deployment, install the included systemd units:
 
 ```bash
-cd /opt/review-intelligence
-git fetch origin main
-git merge --ff-only origin/main
-docker compose pull
-docker compose up -d --remove-orphans
+sudo install -m 0644 deploy/review-intelligence-update.service /etc/systemd/system/
+sudo install -m 0644 deploy/review-intelligence-update.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now review-intelligence-update.timer
 ```
 
-`--ff-only` prevents the updater from silently overwriting local changes. If the checkout has diverged, resolve that state manually before continuing.
+The timer runs daily with a randomized delay. Disable it when updates must be approved manually.
 
 Database migrations should be applied before exposing a new application version when the release includes schema changes:
 
 ```bash
-docker compose run --rm app alembic upgrade head
+docker compose run --rm api alembic upgrade head
 ```
 
-Use a systemd timer or another scheduler only when the server is dedicated to this deployment and the administrator accepts automatic application upgrades. Automatic upgrades should run with backups and monitoring in place.
+Automatic upgrades should run with backups and monitoring in place.
 
 ## Manual update
 
 1. Back up PostgreSQL and any other required persistent data.
 2. Check the target release notes and breaking-change instructions.
-3. From the installation directory, fetch the release tag:
+3. From the installation directory, run:
 
 ```bash
-git fetch --tags origin
-git checkout <release-tag>
+sh scripts/update.sh
 ```
 
-4. Pull/build the deployment and start it:
+The updater stops if the working tree contains local changes or the update cannot be fast-forwarded. Docker Compose refreshes declared images/build dependencies as part of the update.
+
+4. Apply Alembic migrations when required:
 
 ```bash
-docker compose pull
-docker compose up -d --build --remove-orphans
+docker compose run --rm api alembic upgrade head
 ```
 
-5. Apply Alembic migrations when required:
-
-```bash
-docker compose run --rm app alembic upgrade head
-```
-
-6. Verify the dashboard, API health, review ingestion and publication policy before enabling broader automation.
+5. Verify the dashboard, API health, review ingestion and publication policy before enabling broader automation.
 
 ## Rollback
 
