@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily safe update check for Review Intelligence Platform
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
