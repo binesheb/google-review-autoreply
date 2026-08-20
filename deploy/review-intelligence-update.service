@@ -1,0 +1,9 @@
+[Unit]
+Description=Review Intelligence Platform safe update
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/review-intelligence
+ExecStart=/bin/sh /opt/review-intelligence/scripts/update.sh
