@@ -4,7 +4,7 @@ This deployment is designed to be upgraded without replacing persistent PostgreS
 
 ## Automatic update
 
-The repository includes `scripts/update.sh`. It refuses to overwrite local changes, fast-forwards only from the configured branch, validates the Compose configuration, refreshes container images/build dependencies, and recreates the stack without touching persistent volumes.
+The repository includes `scripts/update.sh`. Automatic updates are restricted to `origin/main`; the script refuses local changes, non-`main` checkouts and diverged history, then performs a fast-forward-only update. It validates the Compose configuration, refreshes container images/build dependencies, and recreates the stack without touching persistent volumes. If deployment validation fails, it restores the previous repository revision and attempts to bring the known-good stack back.
 
 For a managed deployment, install the included systemd units:
 
@@ -28,14 +28,14 @@ Automatic upgrades should run with backups and monitoring in place.
 ## Manual update
 
 1. Back up PostgreSQL and any other required persistent data.
-2. Check the target release notes and breaking-change instructions.
-3. From the installation directory, run:
+2. Review the changes on `origin/main` and any breaking-change instructions.
+3. From a clean checkout on `main`, run:
 
 ```bash
 sh scripts/update.sh
 ```
 
-The updater stops if the working tree contains local changes or the update cannot be fast-forwarded. Docker Compose refreshes declared images/build dependencies as part of the update.
+The updater stops if the working tree contains local changes, the checkout is not `main`, history has diverged, or the update cannot be fast-forwarded. Docker Compose refreshes declared images/build dependencies as part of the update.
 
 4. Apply Alembic migrations when required:
 
@@ -47,7 +47,7 @@ docker compose run --rm api alembic upgrade head
 
 ## Rollback
 
-If a release fails validation, return to the previously known-good Git tag and restart the stack. Do not delete persistent volumes as part of rollback unless restoring from a verified backup.
+The updater automatically restores the previous repository revision when validation or deployment fails. For a manual rollback, return to a known-good commit and restart the stack. Do not delete persistent volumes as part of rollback unless restoring from a verified backup.
 
 ## Safety boundary
 
