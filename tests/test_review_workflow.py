@@ -1,4 +1,4 @@
-from app.models import AIDraft, Organization, Location, Review
+from app.models import AIDraft, Location, Organization, Review
 from app.review.workflow import apply_action
 
 
