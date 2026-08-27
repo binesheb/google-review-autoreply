@@ -78,15 +78,39 @@ def apply_action(
         if not draft:
             raise ValueError("No response draft exists")
         review.status = "approved"
-        db.add(Approval(review_id=review_id, draft_id=draft.id, action="approve", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id,
+                action="approve",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "deny":
         review.status = "denied"
-        db.add(Approval(review_id=review_id, draft_id=draft.id if draft else None, action="deny", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id if draft else None,
+                action="deny",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "regenerate":
         review.status = "regeneration_requested"
-        db.add(Approval(review_id=review_id, draft_id=draft.id if draft else None, action="regenerate", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id if draft else None,
+                action="regenerate",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "publish":
         if not draft or not draft.response_text.strip():
@@ -94,19 +118,51 @@ def apply_action(
         if not draft.safety_passed:
             raise ValueError("Response must pass the safety gate before publishing")
         review.status = "publish_requested"
-        db.add(Approval(review_id=review_id, draft_id=draft.id, action="publish", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id,
+                action="publish",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "escalate":
         review.status = "escalated"
-        db.add(Approval(review_id=review_id, draft_id=draft.id if draft else None, action="escalate", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id if draft else None,
+                action="escalate",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "hold":
         review.status = "on_hold"
-        db.add(Approval(review_id=review_id, draft_id=draft.id if draft else None, action="hold", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id if draft else None,
+                action="hold",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     elif action == "resume":
         review.status = "discovered"
-        db.add(Approval(review_id=review_id, draft_id=draft.id if draft else None, action="resume", actor=actor, comment=comment))
+        db.add(
+            Approval(
+                review_id=review_id,
+                draft_id=draft.id if draft else None,
+                action="resume",
+                actor=actor,
+                comment=comment,
+            )
+        )
 
     review.updated_at = datetime.now(UTC)
     _audit(db, f"review.{action}", review_id, actor, comment)
