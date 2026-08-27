@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.models import Review
 
-
 QUEUE_STATUSES = (
     "discovered",
     "drafted",
