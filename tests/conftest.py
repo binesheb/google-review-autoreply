@@ -2,8 +2,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.db import Base
 from app import models  # noqa: F401
+from app.db import Base
 
 
 @pytest.fixture()
