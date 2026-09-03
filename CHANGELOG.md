@@ -9,6 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Changed
 - CI now validates Bash syntax for repository deployment and update scripts without executing privileged installation or update operations.
 - Review workflow tests now use an isolated database fixture and Ruff-compliant import/formatting fixes, restoring the full CI pipeline to green.
+- CI now pins GitHub Actions to immutable commit SHAs while retaining their documented major versions.
 
 ## [1.0.0] - 2026-08-23
 
