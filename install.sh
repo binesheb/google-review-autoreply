@@ -74,7 +74,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 ARCHIVE="$TMP_DIR/review-platform.tar.gz"
 
 log "Downloading the current product from GitHub main..."
-curl -fL --retry 3 --retry-delay 2 "https://github.com/binesheb/google-review-autoreply/archive/refs/heads/main.tar.gz" -o "$ARCHIVE"
+curl -fL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 300 "https://github.com/binesheb/google-review-autoreply/archive/refs/heads/main.tar.gz" -o "$ARCHIVE"
 tar -xzf "$ARCHIVE" -C "$TMP_DIR"
 SOURCE_DIR="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'google-review-autoreply-*' | head -n 1)"
 [[ -n "$SOURCE_DIR" ]] || die "Repository archive could not be unpacked."
