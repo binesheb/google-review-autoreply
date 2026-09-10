@@ -36,10 +36,13 @@ fi
 
 git merge --ff-only "origin/$BRANCH"
 
-if ! docker compose config -q || ! docker compose pull || ! docker compose up -d --build --remove-orphans; then
+# --wait makes deployment validation fail when a declared service does not
+# become running/healthy, allowing the rollback path below to restore the
+# previously known-good revision instead of reporting a false success.
+if ! docker compose config -q || ! docker compose pull || ! docker compose up -d --wait --wait-timeout 120 --build --remove-orphans; then
   echo "Update failed. Restoring repository revision $PREVIOUS_REVISION."
   git reset --hard "$PREVIOUS_REVISION"
-  docker compose config -q && docker compose up -d --build --remove-orphans || true
+  docker compose config -q && docker compose up -d --wait --wait-timeout 120 --build --remove-orphans || true
   exit 1
 fi
 
