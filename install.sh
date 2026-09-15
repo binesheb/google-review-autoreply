@@ -82,16 +82,27 @@ SOURCE_DIR="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'google-revi
 mkdir -p "$INSTALL_DIR"
 if [[ -f "$INSTALL_DIR/.env" ]]; then
   log "Existing installation detected. Preserving configuration and Docker volumes."
-  # Load non-secret values as defaults for the interactive prompts.
-  set +u
-  source "$INSTALL_DIR/.env" || true
-  set -u
-  APP_NAME="${APP_NAME:-$PRODUCT}"
-  APP_PORT="${APP_PORT:-$DEFAULT_PORT}"
-  APP_TIMEZONE="${APP_TIMEZONE:-$DEFAULT_TIMEZONE}"
-  AI_MODEL="${AI_MODEL:-$DEFAULT_MODEL}"
-  ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
-  AUTO_PUBLISH_ENABLED="${AUTO_PUBLISH_ENABLED:-false}"
+  # Read known non-secret values from simple KEY=value lines without sourcing the file.
+  # This prevents arbitrary shell commands in a compromised/malformed .env from executing.
+  env_value() {
+    local key="$1"
+    sed -n -E "s/^${key}=//p" "$INSTALL_DIR/.env" | head -n 1
+  }
+  APP_NAME="${APP_NAME:-$(env_value APP_NAME)}"
+  APP_PORT="${APP_PORT:-$(env_value APP_PORT)}"
+  APP_TIMEZONE="${APP_TIMEZONE:-$(env_value APP_TIMEZONE)}"
+  AI_MODEL="${AI_MODEL:-$(env_value AI_MODEL)}"
+  ADMIN_USERNAME="${ADMIN_USERNAME:-$(env_value ADMIN_USERNAME)}"
+  AUTO_PUBLISH_ENABLED="${AUTO_PUBLISH_ENABLED:-$(env_value AUTO_PUBLISH_ENABLED)}"
+  ADMIN_PASSWORD_HASH="${ADMIN_PASSWORD_HASH:-$(env_value ADMIN_PASSWORD_HASH)}"
+  SECRET_KEY="${SECRET_KEY:-$(env_value SECRET_KEY)}"
+  POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(env_value POSTGRES_PASSWORD)}"
+  [[ -n "$APP_NAME" ]] || APP_NAME="$PRODUCT"
+  [[ -n "$APP_PORT" ]] || APP_PORT="$DEFAULT_PORT"
+  [[ -n "$APP_TIMEZONE" ]] || APP_TIMEZONE="$DEFAULT_TIMEZONE"
+  [[ -n "$AI_MODEL" ]] || AI_MODEL="$DEFAULT_MODEL"
+  [[ -n "$ADMIN_USERNAME" ]] || ADMIN_USERNAME="admin"
+  [[ -n "$AUTO_PUBLISH_ENABLED" ]] || AUTO_PUBLISH_ENABLED=false
 fi
 
 if [[ "${NONINTERACTIVE:-0}" != "1" ]]; then
