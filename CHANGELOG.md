@@ -6,6 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Security
+- Installer upgrades now read known `.env` values as plain `KEY=value` data instead of sourcing the existing environment file, preventing shell commands embedded in a compromised or malformed upgrade configuration from executing as root.
+
 ### Changed
 - CI now validates Bash syntax for repository deployment and update scripts without executing privileged installation or update operations.
 - Review workflow tests now use an isolated database fixture and Ruff-compliant import/formatting fixes, restoring the full CI pipeline to green.
