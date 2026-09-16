@@ -61,13 +61,16 @@ if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>
 fi
 
 # First-run configuration. Existing .env values are preserved on upgrades.
+# Keep these empty until an existing .env has been read so its values are not
+# accidentally shadowed by the built-in defaults. Explicit environment values
+# still take precedence because env_value only fills empty variables.
 INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
-APP_PORT="${APP_PORT:-$DEFAULT_PORT}"
-APP_TIMEZONE="${APP_TIMEZONE:-$DEFAULT_TIMEZONE}"
-AI_MODEL="${AI_MODEL:-$DEFAULT_MODEL}"
-APP_NAME="${APP_NAME:-$PRODUCT}"
-ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
-AUTO_PUBLISH_ENABLED="${AUTO_PUBLISH_ENABLED:-false}"
+APP_PORT="${APP_PORT:-}"
+APP_TIMEZONE="${APP_TIMEZONE:-}"
+AI_MODEL="${AI_MODEL:-}"
+APP_NAME="${APP_NAME:-}"
+ADMIN_USERNAME="${ADMIN_USERNAME:-}"
+AUTO_PUBLISH_ENABLED="${AUTO_PUBLISH_ENABLED:-}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -97,13 +100,15 @@ if [[ -f "$INSTALL_DIR/.env" ]]; then
   ADMIN_PASSWORD_HASH="${ADMIN_PASSWORD_HASH:-$(env_value ADMIN_PASSWORD_HASH)}"
   SECRET_KEY="${SECRET_KEY:-$(env_value SECRET_KEY)}"
   POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(env_value POSTGRES_PASSWORD)}"
-  [[ -n "$APP_NAME" ]] || APP_NAME="$PRODUCT"
-  [[ -n "$APP_PORT" ]] || APP_PORT="$DEFAULT_PORT"
-  [[ -n "$APP_TIMEZONE" ]] || APP_TIMEZONE="$DEFAULT_TIMEZONE"
-  [[ -n "$AI_MODEL" ]] || AI_MODEL="$DEFAULT_MODEL"
-  [[ -n "$ADMIN_USERNAME" ]] || ADMIN_USERNAME="admin"
-  [[ -n "$AUTO_PUBLISH_ENABLED" ]] || AUTO_PUBLISH_ENABLED=false
 fi
+
+# Apply defaults only after existing configuration has had a chance to supply values.
+APP_NAME="${APP_NAME:-$PRODUCT}"
+APP_PORT="${APP_PORT:-$DEFAULT_PORT}"
+APP_TIMEZONE="${APP_TIMEZONE:-$DEFAULT_TIMEZONE}"
+AI_MODEL="${AI_MODEL:-$DEFAULT_MODEL}"
+ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
+AUTO_PUBLISH_ENABLED="${AUTO_PUBLISH_ENABLED:-false}"
 
 if [[ "${NONINTERACTIVE:-0}" != "1" ]]; then
   printf '\n%s\n' "Initial setup (press Enter to keep the value in brackets)"
