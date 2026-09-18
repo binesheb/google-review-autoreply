@@ -30,7 +30,7 @@ A non-interactive mode is also supported through environment variables for autom
 For a controlled manual deployment, the installer accepts `REVIEW_PLATFORM_REF` to select a reviewed Git branch instead of always using `main`:
 
 ```bash
-REVIEW_PLATFORM_REF=release-branch curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo env REVIEW_PLATFORM_REF=release-branch bash
 ```
 
 Use a reviewed branch only; the installer currently treats the value as a branch name. Production upgrades should be performed from a reviewed, controlled ref rather than an unreviewed moving branch.
