@@ -6,7 +6,7 @@ DEFAULT_INSTALL_DIR="/opt/review-intelligence"
 DEFAULT_PORT="8000"
 DEFAULT_TIMEZONE="UTC"
 DEFAULT_MODEL="qwen3:4b"
-# Pin upgrades by setting REVIEW_PLATFORM_REF to a reviewed tag or commit SHA.
+# Pin upgrades by setting REVIEW_PLATFORM_REF to a reviewed branch name.
 REVIEW_PLATFORM_REF="${REVIEW_PLATFORM_REF:-main}"
 
 log() { printf '\n[Review Intelligence] %s\n' "$*"; }
@@ -78,8 +78,8 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 ARCHIVE="$TMP_DIR/review-platform.tar.gz"
 
-log "Downloading the product from GitHub ref: $REVIEW_PLATFORM_REF"
-curl -fL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 300 "https://github.com/binesheb/google-review-autoreply/archive/refs/${REVIEW_PLATFORM_REF/main/heads/main}.tar.gz" -o "$ARCHIVE"
+log "Downloading the product from GitHub branch: $REVIEW_PLATFORM_REF"
+curl -fL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 300 "https://github.com/binesheb/google-review-autoreply/archive/refs/heads/${REVIEW_PLATFORM_REF}.tar.gz" -o "$ARCHIVE"
 tar -xzf "$ARCHIVE" -C "$TMP_DIR"
 SOURCE_DIR="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'google-review-autoreply-*' | head -n 1)"
 [[ -n "$SOURCE_DIR" ]] || die "Repository archive could not be unpacked."
