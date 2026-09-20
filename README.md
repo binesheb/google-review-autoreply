@@ -25,15 +25,19 @@ The installer is interactive on first install and asks for configurable deployme
 
 A non-interactive mode is also supported through environment variables for automated deployments.
 
-### Reproducible branch selection
+### Reproducible deployment refs
 
-For a controlled manual deployment, the installer accepts `REVIEW_PLATFORM_REF` to select a reviewed Git branch instead of always using `main`:
+For a controlled manual deployment, the installer accepts `REVIEW_PLATFORM_REF`. Use a reviewed branch for ongoing controlled deployment, or an exact 40-character commit SHA when the deployment must be immutable:
 
 ```bash
+# Reviewed branch
 curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo env REVIEW_PLATFORM_REF=release-branch bash
+
+# Exact commit
+curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/main/install.sh | sudo env REVIEW_PLATFORM_REF=0123456789abcdef0123456789abcdef01234567 bash
 ```
 
-Use a reviewed branch only; the installer currently treats the value as a branch name. Production upgrades should be performed from a reviewed, controlled ref rather than an unreviewed moving branch.
+The installer downloads the selected branch or exact commit archive from GitHub. Prefer an exact commit SHA for production rollouts when reproducibility is more important than tracking a reviewed branch. Do not use an unreviewed moving branch for production upgrades.
 
 ## Product architecture
 
