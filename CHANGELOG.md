@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Security
 - Installer upgrades now read known `.env` values as plain `KEY=value` data instead of sourcing the existing environment file, preventing shell commands embedded in a compromised or malformed upgrade configuration from executing as root.
+- Installer upgrades now validate required deployment files in the downloaded archive before replacing an existing installation, preventing an incomplete archive from leaving a partial deployment.
 
 ### Added
 - Installer deployments can now target an exact 40-character commit SHA as well as a reviewed branch, providing an immutable manual deployment path.
