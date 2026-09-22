@@ -92,6 +92,12 @@ tar -xzf "$ARCHIVE" -C "$TMP_DIR"
 SOURCE_DIR="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'google-review-autoreply-*' | head -n 1)"
 [[ -n "$SOURCE_DIR" ]] || die "Repository archive could not be unpacked."
 
+# Validate the archive before touching an existing installation. A missing
+# deployment-critical file must never turn an upgrade into a partial install.
+for required_path in docker-compose.yml Dockerfile pyproject.toml app alembic; do
+  [[ -e "$SOURCE_DIR/$required_path" ]] || die "Downloaded release is incomplete: missing $required_path. Existing installation was not modified."
+done
+
 mkdir -p "$INSTALL_DIR"
 if [[ -f "$INSTALL_DIR/.env" ]]; then
   log "Existing installation detected. Preserving configuration and Docker volumes."
