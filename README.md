@@ -39,6 +39,12 @@ curl -fsSL https://raw.githubusercontent.com/binesheb/google-review-autoreply/ma
 
 The installer downloads the selected branch or exact commit archive from GitHub. Prefer an exact commit SHA for production rollouts when reproducibility is more important than tracking a reviewed branch. Do not use an unreviewed moving branch for production upgrades.
 
+## Product Requirements
+
+The authoritative product specification is maintained in [docs/PRD.md](docs/PRD.md).
+
+The PRD defines the product vision, workflows, response approval/regeneration lifecycle, safety model, knowledge/RAG architecture, deployment requirements, roadmap and acceptance criteria.
+
 ## Product architecture
 
 ```text
